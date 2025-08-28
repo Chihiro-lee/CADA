@@ -24,8 +24,9 @@
 
 //The number of bytes used by the TCM after the 0xfe00 address. 
 //#define OVERFLOWTCM 126
-#define OVERFLOWTCM 258
+#define OVERFLOWTCM 286
 
+volatile uint8_t update_cnt = 0;
 //the lenght of the metadata encoding the image length
 __attribute__((section(".tcm:rodata"))) const char dataLengthBytes = 2;
 
@@ -53,7 +54,8 @@ __attribute__((section(".tcm:code"))) void secureUpdate(){
  
     //Disable interrupts during setup phase  
     __dint();
-    
+    if(update_cnt > 16)
+    	return;
     /* used to TOCTOU check */
     __asm("mov.w r8, &write_count_lee_secureUpdate");
     tmp_write_count_lee_value += write_count_lee_secureUpdate;

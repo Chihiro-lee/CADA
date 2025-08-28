@@ -28,8 +28,7 @@ PYTHON := python3
 ROOT_DIR := .
 
 VERIFIER := $(TOOLCHAIN_DIR)/postprocessor.py
-#MODIFIER := $(TOOLCHAIN_DIR)/modifier.py
-MODIFIER := $(TOOLCHAIN_DIR)/modifier_lee.py
+MODIFIER := $(TOOLCHAIN_DIR)/modifier.py
 METADATA := $(TOOLCHAIN_DIR)/metadata.py
 
 RM := rm -rf

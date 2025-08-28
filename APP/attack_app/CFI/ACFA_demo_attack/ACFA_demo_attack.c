@@ -83,7 +83,7 @@ void waitForPassword(){
     //return total;
 }
 
-void read_data(char * entry){
+void read_data(volatile char * entry){
     // simulate uart receive
     int  i = 0;
     while(user_input[i] != cr){

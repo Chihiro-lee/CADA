@@ -2,28 +2,28 @@
 ### 
 We highly recommend reading the scientific article before diving into this report!
 
-Following, there is a list of instructions and broad guidelines on how to compile, run and test SYSNAME. Depending on the board used for this evaluation, on the programming environment and the tools used, the behaviour of this implementation might change. 
+Following, there is a list of instructions and broad guidelines on how to compile, run and test CADA. Depending on the board used for this evaluation, on the programming environment and the tools used, the behaviour of this implementation might change. 
 
 **Disclaimer**: *The following is a working proof of concept. There might be bugs and inconsistencies which were not addressed. Furthermore, the code might damage your MCU board, erasing its memory or degrading its hardware. Use it at your own risk, we do not assume any responsibility for the use of this code, or for the damage it can cause.*
 
 ## Folders Description
-- `UpdateApplication/`: this folder contains all of the required files for compiling a single application for SYSNAME. Specifically, it should be populated with the source files of the application.
+- `UpdateApplication/`: this folder contains all of the required files for compiling a single application for CADA. Specifically, it should be populated with the source files of the application.
     - `Makefile`: makefile for compiling the application to be deployed. The result is a file `deployable.out` which is ready for deployment.
     - `src/`: this folder should contain all of the source files of the user application to be compiled (both '.c' and '.s' files). 
-- `TCM/`: this folder contains the source code of SYSNAME TCM. Morevoer, it contains the source files of a user application (untrusted) that can be deployed alongside it without going over remote update.
+- `TCM/`: this folder contains the source code of CADA TCM. Morevoer, it contains the source files of a user application (untrusted) that can be deployed alongside it without going over remote update.
     - `Makefile`: makefile for compiling both the untrusted application and the core of TCM. The result is the file `deployable.out` which is ready to be deployed on the MCU.
     - `app/`: folder containing all of the files required for the compilation of the untrusted application
         - `src/`: folder containing all of the source files, both '.c' and '.s' of the untrusted application
         - `Makefile.include`: makefile to be included, containing some directives for the compilation of the application by the main Makefile
-    - `core/`: folder containing all of the files required for the SYSNAME compilation.
-        - `src/`: folder containing all of the source files, both '.c' and '.s' of SYSNAME.
-            - `core.c|.h`: file containing the source code for the main SYSNAME functions. It is usually used in Measurement stage.
+    - `core/`: folder containing all of the files required for the CADA compilation.
+        - `src/`: folder containing all of the source files, both '.c' and '.s' of CADA.
+            - `core.c|.h`: file containing the source code for the main CADA functions. It is usually used in Measurement stage.
             - `core_withoutMeasurement.c|.h`: version without Measurement.
             - `virt_fun.s`: assembly file containing the definitions of the various virtual functions. It is usually used in Measurement stage.
             - `virt_fun_withoutMeasurement.s`: version without Measurement.
             - `protected_isr.s`: assembly file containing the protected Interrupt Service Routines for the secure interrupt management.
             - `secureContextSwitch.c|.h`: source files for the secure context switch operations which allow the backup and restoration of the RAM, or any other hook operation during a safe context switch.
-            - `RAhook.h`: header file needed by the application (needs to be included in the source files with the '#include' directive) in order to call API of SYSNAME and to setup for receiving challenges. This file get automatically copied to the `app/src/` directory of the application.
+            - `RAhook.h`: header file needed by the application (needs to be included in the source files with the '#include' directive) in order to call API of CADA and to setup for receiving challenges. This file get automatically copied to the `app/src/` directory of the application.
         - `ext_modules/`: folder containing the source files of the various extensions. These files are copied in the `core/src/` folder by the makefile if specified.
             - `secureUpdate.c|.h`: source file for the secure update over serial communication. It is usually used in Measurement stage.
             - `secureUpdate_withoutMeasurement.c|.h`: version without Measurement.
@@ -35,7 +35,7 @@ Following, there is a list of instructions and broad guidelines on how to compil
     - `linkerScript.ld`: modified linker scripts containing the directives for the linker when compiling ONLY the application. Used exclusively by the Makefile.
     - `linkerScriptWithCore.ld`: modified linker scripts containing the directives for the linker when compiling both the application and the TCM. Used exclusively by the Makefile.
     - `linkerScriptWithCore_withMeasurement.ld`: version without Measurement.
-    - `loadProgram.py`: python script used to load the program onto the MCU via UART interface (serial port), in compliance with the SYSNAME secure update protocol.
+    - `loadProgram.py`: python script used to load the program onto the MCU via UART interface (serial port), in compliance with the CADA secure update protocol.
     - `metadata.py`: python script in charge of adding the required metadata to the output file. Used exclusively by the Makefile.
     - `modifier.py`: python script in charge of replacing unsafe instructions. Used exclusively by the Makefile.
     - `postprocessor.py`: python script in charge of rejecting the application in case of unsafe instructions (compile-time). Used exclusively by Makefile.
@@ -61,22 +61,23 @@ Following, there is a list of instructions and broad guidelines on how to compil
             - `getConsumptions.sh`: script to get all of the power measures via the java script.
             - `getGraph.py`: script to generate graphs for the power measures obtained with the above script.
         - `remote_attestation/verifier/verifier.py`: python script acting simulating a verifier for the Remote Attestation. This script computes the HMAC of a block of data.     
-    - `compiler/`: contains the various compilers used by SYSNAME, with some compilation libraries and some backups.
+    - `compiler/`: contains the various compilers used by CADA, with some compilation libraries and some backups.
         - `include_gcc/`: contains some of the includes files required by the compiler and provided by TI.
-        - `msp430-gcc-9.2.0.50_linux_instrumented/`: contains the instrumented GCC compiler used by SYSNAME.
-        - `msp430-gcc-9.2.0.50_linux64_original/`: contains the origin GCC compiler used by SYSNAME.
+        - `msp430-gcc-9.2.0.50_linux_instrumented/`: contains the instrumented GCC compiler used by CADA.
+        - `msp430-gcc-9.2.0.50_linux64_original/`: contains the origin GCC compiler used by CADA.
         
-- `App/`: folder containing all of the test applications used during the evaluation of the proposed SYSNAME implementation.
+- `App/`: folder containing all of the test applications used during the evaluation of the proposed CADA implementation.
     - `ACFA_modified_app/`: instrumented and correctly working
     - `attack_app/`: instrumented and correctly working
     - `Bitcount/`: instrumented and correctly working
     - `CopyDMA/`: instrumented and correctly working. The Application copies the content of the flash into RAM with memcpy and with the DMA. In both cases, it checks whether the result is correct. The DMA triggers an interrupt when finished.
+    - `DIALED_modified_app/`: instrumented and correctly working
     - `F5529-serial/`: instrumented and correctly working
     - `OAT_modified_app/`: instrumented and correctly working
     - `SerialMSP/`: instrumented and correctly working
     - `XorCypher/`: instrumented and correctly working
-    - `SudokuSolver/`: instrumented and correctly working
-    - `TiBenchmark/`: folder containing all of the benchmark applications used by TI and during the evalution of the proposed SYSNAME implementation.
+    - `Verify&Revive_modified/`: instrumented and correctly working
+    - `TiBenchmark/`: folder containing all of the benchmark applications used by TI and during the evalution of the proposed CADA implementation.
         - `matrixMultiplication/`: instrumented and correctly working.
         - `floatingPointMath/`: instrumented and correctly working.
         - `firFilter/`: instrumented and correctly working.
@@ -101,8 +102,8 @@ Following, there is a list of instructions and broad guidelines on how to compil
 - (optional) Java for the execution of powerConsumption measurement scripts.
 
 
-## Loading SYSNAME TCM (with the default untrusted application)
-In order to secure the microcontroller, the TCM (i.e. the root of trust for our architecture) needs to be loaded before any other program. The folder `TCM/` contains all of the required files for the compilation of SYSNAME TCM. Although it is possible to also load an untrusted application right away, to be loaded with the TCM, currently the toolchain does not fully support it. The first initialisation should be perfomed with the default application. 
+## Loading CADA TCM (with the default untrusted application)
+In order to secure the microcontroller, the TCM (i.e. the root of trust for our architecture) needs to be loaded before any other program. The folder `TCM/` contains all of the required files for the compilation of CADA TCM. Although it is possible to also load an untrusted application right away, to be loaded with the TCM, currently the toolchain does not fully support it. The first initialisation should be perfomed with the default application. 
 The following steps must be performed:
 - (optional) Copy all of the required untrusted application's source files inside the `TCM/app/src/` folder. The default application only calls the *receiveUpdate()* function from the RAhooks to initiate a secure update. If such function is not required, or the secureupdate module is not loaded, it should be changed. If no application is loaded, the default one will be. This will initiate a secure update and thus wait for any deployable on the UART communication.
 - (optional) Modify the `TCM/Makefile` file to update the binaries paths. By default the toolchain will use the self-contained compiler in this repository.
@@ -117,18 +118,17 @@ If you see any other combination of LED check section "LED Signals" for debuggin
 
 ## Measurement
 In order to get Vrf local database, The following steps must be performed:
-- Change the version of `core.c/virt_fun.s/secureUpdate.c` to Mearsurement version. In `TCM/core` folder, modify the correct version of each module to be loaded into the TCM in `Makefile.include` file.
+- Change the version of `virt_fun.s` to Mearsurement version. In `TCM/core` folder, modify the correct version of each module to be loaded into the TCM in `Makefile.include` file.
 - Generate the secure deployable image of the TCM using the `make` command from inside the `TCM/` folder. This will generate a `deployable.out` binary.
-- Under `toolchain/` path, execute the `python3 ReceiveData.py` command. This comman will open serial
-port and wait for coming data from Prv.
+- Under `toolchain/` path, execute the `python3 ReceiveData.py` command. This comman will open serial port and wait for coming data from Prv.
 - Load the `TCM/deployable.out` image on the device, e.g. using Code Composer Studio 'load' function. 
 - After receiving data from Prv, the file `data.txt` wili be created in `toolchain/` folder, this file contains the measurement result of Prv.
 
 ## Runtime evidence collection
 In order to get Prv runtime evidence, The following steps must be performed:
-- Change the version of `core.c/virt_fun.s/secureUpdate.c` to runtime version. In `TCM/core` folder, modify the correct version of each module to be loaded into the TCM in `Makefile.include` file.
+- Change the version of `virt_fun.s` to runtime version. In `TCM/core` folder, modify the correct version of each module to be loaded into the TCM in `Makefile.include` file.
 - Generate the secure deployable image of the TCM using the `make` command from inside the `TCM/` folder. This will generate a `deployable.out` binary.
-- Under `toolchain/` path, execute the `python3 Send.py` command. This command will open serial port and call API for sending evidence we want to Vrf(The default content of file will send count value to Vrf). We can change the content of `Send.py` to send Xor Compute Result.
+- Under `toolchain/` path, execute the `python3 Send.py` command. This command will open serial port and call API for sending evidence we want to Vrf(The default content of file will send Xor Compute Result to Vrf). We can change the content of `Send.py` to send readValue.
 - Under `toolchain/` path, execute the `python3 ReceiveData.py` command. This command will open serial port and wait for coming data from Prv.
 - Load the `TCM/deployable.out` image on the device, e.g. using Code Composer Studio 'load' function. 
 - After receiving data from Prv, the file `data.txt` wili be created in `toolchain/` folder, this file contains the runtime evidence of Prv.
@@ -140,11 +140,11 @@ In order to Verify Prv runtime evidence, The following steps must be performed:
 
 ## Applications updates / Remote deployments
 ### Compiling the update/application 
-In order to securely deploy an application via SYSNAME, a properly crafted update must be compiled. To automate this process, SYSNAME offers the folder `UpdateApplication/` which contains the Makefile that must be used. Precisely, the following steps are required to compile the untrusted update:
+In order to securely deploy an application via CADA, a properly crafted update must be compiled. To automate this process, CADA offers the folder `UpdateApplication/` which contains the Makefile that must be used. Precisely, the following steps are required to compile the untrusted update:
 - Copy all of the source files of the application ('*.c' and '*.s') to the `UpdateApplication/src/` folder. If the folder does not exist it should be created. These are the files that will be compiled.
 - Execute the `make` command. This will generate the first executable `deployable.out`. 
 - Execute the `make libraries` command to generate some helper files for the instrumentation of the standard library code (check section "Library instrumentation" for more details).
-- Execute the `make clean && make` command to generate the final executable `deployable.out` containing the instrumented code for both the application and the standard libraries used by it. NB: this executable is not an ELF file because it contains extra metadata added for SYSNAME. To check the original ELF file you can inspect `appWithoutMetadata.out`.
+- Execute the `make clean && make` command to generate the final executable `deployable.out` containing the instrumented code for both the application and the standard libraries used by it. NB: this executable is not an ELF file because it contains extra metadata added for CADA. To check the original ELF file you can inspect `appWithoutMetadata.out`.
 - Proceed with the deployment
 
 
@@ -153,14 +153,14 @@ In order to securely deploy an application via SYSNAME, a properly crafted updat
 An application update can only be performed if the MCU is in the receiving update state (see Section **LED signals**). In order to enter this state, the running program must call the `callReceiveUpdate()` function from the `RAhook.h` header file (as is the case when loading the TCM with the default application). When the MCU is ready to receive the update execute the `/toolchain/loadProgram.py` python script, passing as arguments the final application binary (e.g. `deployable.out`) and the serial port name (e.g. `/dev/ttyACM1` on Linux or `COM4` on Windows). NB: The serial port might change across executions or systems, please check the serial ports available on your system (especially those that become available as soon as the MCU board is plugged through the USB port).
 
 If the serial port is correct, the script will start uploading the various chunks of the application, waiting for some acknowledgments. As soon as the upload is finished, the script will output a *File sent* to the terminal and the TCM will begin its deployment operations.
-As soon as the TCM receives the image it will verify it. If the image is verified with success and the binary does not contain unsafe code (as should be the case if properly compiled using SYSNAME toolchain), then it should be lunched by the TCM. Otherwise, the TCM will restart the update process and wait for another valid image. 
+As soon as the TCM receives the image it will verify it. If the image is verified with success and the binary does not contain unsafe code (as should be the case if properly compiled using CADA toolchain), then it should be lunched by the TCM. Otherwise, the TCM will restart the update process and wait for another valid image. 
 
 
 Be aware that the code in this repository is compatible with the MSP430 family of microcontroller. However, the code, along with some of the toolchain components, needs to be updated to work with anything different than an MSP430f5529 MCU.
 
 
 ## LED signals
-The following table shows the current SYSNAME' usage of the various LEDs.
+The following table shows the current CADA' usage of the various LEDs.
 
 | Green LED | Red LED | Description |
 | --------- | ------- | ----------- |
@@ -180,7 +180,7 @@ The following table shows the current SYSNAME' usage of the various LEDs.
 |0x000-fff|MMIO|Registers for pheripherals|
 |0x1000-17ff|BSL| BSL |
 |0x1800-19ff|Information Memory|Hardware info used for calibration of the board|
-|0x1c00-2aff|TCM Ram|Ram used by SYSNAME Trusted Applications|
+|0x1c00-2aff|TCM Ram|Ram used by CADA Trusted Applications|
 |0x2c00-43ff|App RAM|Ram used by the untrusted application |
 |0x4400-c3ff|App Code|Where the untrusted yet verified code of the application resides|
 |0xc400-f7ff|TCM code|Code of the TCM|

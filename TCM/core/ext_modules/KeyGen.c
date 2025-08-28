@@ -1028,10 +1028,12 @@ const uint32_t key_set[1024] = {
     0x0a893d73,
     0xa71a237b
 };
-volatile uint16_t key_cnt = 0;
+volatile uint16_t key_cnt;
 __attribute__((section(".tcm:codeUpper"))) void KeyGen(){
     WDTCTL = WDTPW | WDTHOLD; 
     __dint();
+    if(key_cnt > 1023)
+    	key_cnt = 0;
     key_cnt++;    
-    address_key = key_set[key_cnt%1024];
+    address_key = key_set[key_cnt];
 }

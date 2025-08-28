@@ -31,7 +31,7 @@ void waitForInput(){
     verify_entry = read_data(entry);
 }
 
-int read_data(char * entry){
+int read_data(volatile char * entry){
     int  i = 0;
     while(user_input[i] != cr){
         *(entry+i) = user_input[i];

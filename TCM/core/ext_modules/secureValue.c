@@ -13,7 +13,7 @@ __attribute__((section(".tcm:code"))) void secureValue(){
     //Disable interrupts during setup phase
     __dint();
     
-    __asm("movx.a r4, &tmp_r4");
+    __asm("mova r4, &tmp_r4");
     P4SEL |= BIT4+BIT5;    //Configure UART in both TX and RX
     UCA1CTL1 |= UCSWRST;   // Put the USCI state machine in reset
     UCA1CTL1 |= UCSSEL_1;
@@ -41,16 +41,13 @@ __attribute__((section(".tcm:code"))) void secureValue(){
     }
     uart_send_byte(0x0A);
     uart_send_byte(0x0D);
-    //uint16_to_bytes(record_input_size, record_input_size_bytes);
-    //uart_send_hex_data(record_input_size_bytes, 2);
-    //uart_send_byte(0x0A);
-    //uart_send_byte(0x0D);
+
     
     DFI_MAX = 0x00024000;
 
     P1OUT |= BIT0;
     P4OUT &= 0x7f;
     
-    __asm("movx.a &tmp_r4, r4");
+    __asm("mova &tmp_r4, r4");
 }
 

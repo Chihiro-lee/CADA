@@ -19,7 +19,7 @@ void waitForPin(){
     verify_pin = receivePin(pinStr);
 }
 
-int receivePin(char *pin){
+int receivePin(volatile char *pin){
     // Introduce a buffer overflow and overwrite the return address
     int  i = 0;
     while(user_input[i] != cr){

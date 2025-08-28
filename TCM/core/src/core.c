@@ -36,37 +36,38 @@ __attribute__((section(".tcm:rodata"))) const uint32_t vectorBottom         = 0x
 __attribute__((section(".tcm:rodata"))) const uint16_t safe_br      = 0xfc00;
 __attribute__((section(".tcm:rodata"))) const uint16_t safe_bra     = 0xfc1a;
 __attribute__((section(".tcm:rodata"))) const uint16_t safe_call    = 0xfc34;
-__attribute__((section(".tcm:rodata"))) const uint16_t safe_calla   = 0xfc7e;
-__attribute__((section(".tcm:rodata"))) const uint16_t safe_ret     = 0xfcc8;
-__attribute__((section(".tcm:rodata"))) const uint16_t safe_reti    = 0xfd0c;
-__attribute__((section(".tcm:rodata"))) const uint16_t safe_reta    = 0xfd54;
+__attribute__((section(".tcm:rodata"))) const uint16_t safe_calla   = 0xfc82;
+__attribute__((section(".tcm:rodata"))) const uint16_t safe_ret     = 0xfcd0;
+__attribute__((section(".tcm:rodata"))) const uint16_t safe_reti    = 0xfd18;
+__attribute__((section(".tcm:rodata"))) const uint16_t safe_reta    = 0xfd60;
 
-__attribute__((section(".tcm:rodata"))) const uint16_t safe_mov     = 0xfd98;
-__attribute__((section(".tcm:rodata"))) const uint16_t safe_movx    = 0xfdac;
-__attribute__((section(".tcm:rodata"))) const uint16_t safe_xor     = 0xfdc2;
-__attribute__((section(".tcm:rodata"))) const uint16_t safe_xorx    = 0xfdd6;
-__attribute__((section(".tcm:rodata"))) const uint16_t safe_add     = 0xfdec;
-__attribute__((section(".tcm:rodata"))) const uint16_t safe_addx    = 0xfe00;
-__attribute__((section(".tcm:rodata"))) const uint16_t safe_addc    = 0xfe16;
-__attribute__((section(".tcm:rodata"))) const uint16_t safe_addcx   = 0xfe2a;
-__attribute__((section(".tcm:rodata"))) const uint16_t safe_dadd    = 0xfe40;
-__attribute__((section(".tcm:rodata"))) const uint16_t safe_daddx   = 0xfe54;
-__attribute__((section(".tcm:rodata"))) const uint16_t safe_sub     = 0xfe6a;
-__attribute__((section(".tcm:rodata"))) const uint16_t safe_subx    = 0xfe7e;
-__attribute__((section(".tcm:rodata"))) const uint16_t safe_subc    = 0xfe94;
-__attribute__((section(".tcm:rodata"))) const uint16_t safe_subcx   = 0xfea8;
-__attribute__((section(".tcm:rodata"))) const uint16_t read_mov     = 0xfebe;
-__attribute__((section(".tcm:rodata"))) const uint16_t receive_update_address = 0xfef6;
+__attribute__((section(".tcm:rodata"))) const uint16_t safe_mov     = 0xfda8;
+__attribute__((section(".tcm:rodata"))) const uint16_t safe_movx    = 0xfdbc;
+__attribute__((section(".tcm:rodata"))) const uint16_t safe_xor     = 0xfdd2;
+__attribute__((section(".tcm:rodata"))) const uint16_t safe_xorx    = 0xfde6;
+__attribute__((section(".tcm:rodata"))) const uint16_t safe_add     = 0xfdfc;
+__attribute__((section(".tcm:rodata"))) const uint16_t safe_addx    = 0xfe10;
+__attribute__((section(".tcm:rodata"))) const uint16_t safe_addc    = 0xfe26;
+__attribute__((section(".tcm:rodata"))) const uint16_t safe_addcx   = 0xfe3a;
+__attribute__((section(".tcm:rodata"))) const uint16_t safe_dadd    = 0xfe50;
+__attribute__((section(".tcm:rodata"))) const uint16_t safe_daddx   = 0xfe64;
+__attribute__((section(".tcm:rodata"))) const uint16_t safe_sub     = 0xfe7a;
+__attribute__((section(".tcm:rodata"))) const uint16_t safe_subx    = 0xfe8e;
+__attribute__((section(".tcm:rodata"))) const uint16_t safe_subc    = 0xfea4;
+__attribute__((section(".tcm:rodata"))) const uint16_t safe_subcx   = 0xfeb8;
+__attribute__((section(".tcm:rodata"))) const uint16_t read_mov     = 0xfece;
+__attribute__((section(".tcm:rodata"))) const uint16_t receive_update_address = 0xff12;
 
-__attribute__((section(".tcm:rodata"))) const uint16_t send_xor_address = 0xfefa;
+__attribute__((section(".tcm:rodata"))) const uint16_t send_xor_address = 0xff16;
 
-__attribute__((section(".tcm:rodata"))) const uint16_t send_value_address = 0xfefe;
+__attribute__((section(".tcm:rodata"))) const uint16_t send_value_address = 0xff1a;
 
 
 
 __attribute__((section(".tcm:rodata"))) const uint16_t entryPointBSL = 0x1002;
 /* TODO: modify BSL to check whether return address is valid. 
 Might not be needed since we call the BSL only from the PISTIS secure code. */
+volatile uint8_t  launch_cnt = 0; 
 volatile uint16_t verify_count = 0;
 volatile uint32_t address_key  = 0;
 
@@ -80,6 +81,15 @@ const uint32_t DFI_MIN         = 0x020000;
 volatile uint16_t alwDst[MAX_BUFFER];
 volatile uint16_t counterAlwDst = 0;
 volatile uint8_t counterBuffAlwDst = 0;
+
+/** Instruction history buffer for sequence checks **/
+#define HISTORY_SIZE 6 // Store up to 6 instructions (for 5 prior + current)
+typedef struct {
+    uint16_t opcode; // Instruction opcode
+    uint32_t addr;   // Instruction start address
+} InstructionHistory;
+volatile InstructionHistory instHistory[HISTORY_SIZE];
+volatile uint8_t historyIndex = 0;
 
 /** This address is used to store the CFI temporary data during verification**/
 /** It must be different depending on whether an update has being received or not:
@@ -149,8 +159,14 @@ __attribute__((section(".tcm:code"))) void launchAppCode(){
     __eint();
     //Restore Stack
     __asm("mov #0x43ff, r1");
-
     __asm("mov #0, r8");
+    /*if (launch_cnt == 0){
+    	launch_cnt++;
+    	__asm("mov #0, r8");
+    }
+    else{
+    	__asm("mov &write_count_lee, r8");
+    }*/
     address_key = key_set[0];
     address_xor = 0;
     address_sr = 0;
@@ -414,7 +430,42 @@ __attribute__((section(".tcm:code"))) bool verify(uint16_t address, uint16_t las
                         cfiResult = cfiCheck(*(uint16_t*)operand1);
                     }
                 }
-                
+                if (!cfi && (opCode & 0x003f) == 0x0030 && ((operand1 == safe_mov) || (operand1 == safe_movx) || (operand1 == safe_xor) || (operand1 == safe_xorx) || (operand1 == safe_add) || (operand1 == safe_addx)|| (operand1 == safe_addc) || (operand1 == safe_addcx) || (operand1 == safe_dadd) || (operand1 == safe_daddx) || (operand1 == safe_sub) || (operand1 == safe_subx) || (operand1 == safe_subc)|| (operand1 == safe_subcx) || (operand1 == read_mov))) {
+                    // Expected sequence: MOV SR,R4; DINT; NOP; MOVE variant to R5; MOVE variant to R6
+                    bool sequenceValid = true;
+                    // Check opcodes and dst registers
+                    int idx = (historyIndex - 1 + HISTORY_SIZE) % HISTORY_SIZE; // Current (CALL)
+                    int idx4 = (idx - 1 + HISTORY_SIZE) % HISTORY_SIZE; // MOVE to R6
+                    int idx3 = (idx4 - 1 + HISTORY_SIZE) % HISTORY_SIZE; // MOVE to R5
+                    int idx2 = (idx3 - 1 + HISTORY_SIZE) % HISTORY_SIZE; // NOP
+                    int idx1 = (idx2 - 1 + HISTORY_SIZE) % HISTORY_SIZE; // DINT
+                    int idx0 = (idx1 - 1 + HISTORY_SIZE) % HISTORY_SIZE; // MOV SR,R4
+                    // Verify opcodes
+                    if (instHistory[idx0].opcode != 0x4284 || // MOV SR,R4
+                        instHistory[idx1].opcode != 0xC232 || // DINT
+                        instHistory[idx2].opcode != 0x4300 || // NOP
+                        !isMoveToReg(instHistory[idx3].opcode, extendedWord, 5) || // MOVE variant to R5
+                        !isMoveToReg(instHistory[idx4].opcode, extendedWord, 6)) { // MOVE variant to R6
+                        sequenceValid = false;
+                    }
+                    // Verify address continuity (assuming reg mode len=2 bytes for MOVE)
+                    if (sequenceValid) {
+                        if (instHistory[idx0].addr + 2 != instHistory[idx1].addr ||
+                            instHistory[idx1].addr + 2 != instHistory[idx2].addr ||
+                            instHistory[idx2].addr + 2 != instHistory[idx3].addr ||
+                            instHistory[idx3].addr + 2 != instHistory[idx4].addr ||
+                            instHistory[idx4].addr + 2 != instHistory[idx].addr) {
+                            sequenceValid = false;
+                        }
+                    }
+                    if (!sequenceValid) {
+                        outcome = REJECTED;
+                        #if DEBUG
+                        interruptWord = opCode;
+                        interruptPcOld = pc_old;
+                        #endif
+                    }
+                }
             #if REJECT
             }
             #endif
@@ -911,6 +962,54 @@ __attribute__((section(".tcm:code"))) bool verify(uint16_t address, uint16_t las
                     outcome = REJECTED;
                 }
             } //End immediate CALLA
+            // Check for CALLA #XorCFevn and its preceding sequence
+                if (!cfi && (opCode & 0x00f0) == 0x00b0 && ((srcOperand20Bit == safe_call) || (srcOperand20Bit == safe_calla)) {
+                    // Expected sequence: MOV SR,R4; DINT; NOP; MOVE variant to R6
+                    bool sequenceValid = true;
+                    // Check opcodes and dst registers
+                    int idx = (historyIndex - 1 + HISTORY_SIZE) % HISTORY_SIZE; // Current (CALLA)
+                    int idx3 = (idx - 1 + HISTORY_SIZE) % HISTORY_SIZE; // MOVE to R6
+                    int idx2 = (idx3 - 1 + HISTORY_SIZE) % HISTORY_SIZE; // NOP
+                    int idx1 = (idx2 - 1 + HISTORY_SIZE) % HISTORY_SIZE; // DINT
+                    int idx0 = (idx1 - 1 + HISTORY_SIZE) % HISTORY_SIZE; // MOV SR,R4
+                    // Verify opcodes
+                    if (instHistory[idx0].opcode != 0x4284 || // MOV SR,R4
+                        instHistory[idx1].opcode != 0xC232 || // DINT
+                        instHistory[idx2].opcode != 0x4300 || // NOP
+                        !isMoveToReg(instHistory[idx3].opcode, extendedWord, 6)) { // MOVE variant to R6
+                        sequenceValid = false;
+                    }
+                    // Verify address continuity (calculate len for MOVE variant)
+                    if (sequenceValid) {
+                        uint16_t movOpcode = instHistory[idx3].opcode;
+                        uint8_t movLen = 2; // Default for reg mode
+                        if ((movOpcode & 0xF000) == 0x4000) {
+                            // Standard MOV/MOVX: len=4 if src mode needs operand (indexed/immediate)
+                            if ((movOpcode & 0x0030) == 0x0010 || (movOpcode & 0x0030) == 0x0030) {
+                                movLen = 4;
+                            }
+                        } else if ((movOpcode & 0xF000) == 0x0000 || (movOpcode & 0xF000) == 0x1000) {
+                            // MOVA: len=4 for immediate/symbolic/absolute/indexed, 2 for reg/indirect/auto
+                            uint8_t mode = (movOpcode & 0x00F0) >> 4;
+                            if (mode == 0x2 || mode == 0x3 || mode == 0xC || (movOpcode & 0xF000 == 0x1000 && mode & 0x08 == 0x08)) {
+                                movLen = 4;
+                            }
+                        }
+                        if (instHistory[idx0].addr + 2 != instHistory[idx1].addr ||
+                            instHistory[idx1].addr + 2 != instHistory[idx2].addr ||
+                            instHistory[idx2].addr + 2 != instHistory[idx3].addr ||
+                            instHistory[idx3].addr + movLen != instHistory[idx].addr) {
+                            sequenceValid = false;
+                        }
+                    }
+                    if (!sequenceValid) {
+                        outcome = REJECTED;
+                        #if DEBUG
+                        interruptWord = opCode;
+                        interruptPcOld = pc_old;
+                        #endif
+                    }
+                }
             #if REJECT
             if (outcome != REJECTED){
             #endif

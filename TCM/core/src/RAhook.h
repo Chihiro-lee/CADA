@@ -3,12 +3,9 @@
 
 #include <msp430.h>
 
-#define callSendUpdate() ({asm("BR #0xfef6");})/*{asm("BR #0xfe3e");*/
-#define callSendXor() ({asm("BR #0xfefa");})
-#define callSendValue() ({asm("BR #0xfefe");})
-
-typedef unsigned long uint32_t;
-volatile uint32_t tmp_dfi_r7 = 0;
+#define callSendUpdate() ({asm("BR #0xff12");})
+#define callSendXor() ({asm("BR #0xff16");})
+#define callSendValue() ({asm("BR #0xff1A");})
 
 
 void initUART() {
@@ -30,18 +27,12 @@ void initUART() {
     UCA1IE |= UCRXIE;
     
     //__eint();
-    __bis_SR_register(GIE);   // 启用全局中断
-}
+    __bis_SR_register(GIE);
 
 void __attribute__((interrupt(USCI_A1_VECTOR))) USCI_A1_ISR(void) {
     switch(__even_in_range(UCA1IV,4)) {
     case 0:break;                             
     case 2: 
-        //if (UCA1RXBUF == 'c') { //count send 
-            //UCA1IE &= ~UCRXIE;
-        //    callSendCount();           
-        //    break;
-        //}
         if (UCA1RXBUF == 'x') { //xor_compute
             //UCA1IE &= ~UCRXIE;
             callSendXor();
@@ -52,7 +43,7 @@ void __attribute__((interrupt(USCI_A1_VECTOR))) USCI_A1_ISR(void) {
             callSendUpdate();
             break;
         }
-        if (UCA1RXBUF == 'v') { //receive_update
+        if (UCA1RXBUF == 'v') { //readvalue
             //UCA1IE &= ~UCRXIE;
             callSendValue();
             break;

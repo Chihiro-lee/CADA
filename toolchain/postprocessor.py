@@ -343,7 +343,7 @@ for f in sys.argv[2:]:
         ######  BR + BRA checks #######
         
         elif(match := staticBr.search(line)):
-            if(match.group(2) != "0xfef6" and match.group(2) != "0xfefa" and match.group(2) != "0xfefe"and not checkAddress(match.group(2),bottomInstructionMemory,topInstructionMemory,20)): #BR won't allow more than 16 bits           
+            if(match.group(2) != "0xff12" and match.group(2) != "0xff16" and match.group(2) != "0xff1a" and and not checkAddress(match.group(2),bottomInstructionMemory,topInstructionMemory,20)): #BR won't allow more than 16 bits           
                 #Either jump to forbidden area or read from bootloader
                 print("Violating memory isolation with a BR/BRA #{}: '{}'".format(cnt,match.group(0)))
                 logging.debug("Violating memory isolation with a BR/BRA #{}: '{}'".format(cnt,match.group(0)))

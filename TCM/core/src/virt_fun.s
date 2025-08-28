@@ -1,7 +1,3 @@
-;    Author: Michele Grisafi
-;    Email: michele.grisafi@unitn.it
-;    License: MIT 
-
 ;   This file includes all of the virtual functions used by the TCM.
 
 ;#include "core.h"
@@ -65,12 +61,12 @@ safe_call_fun:
     MOVA R6, &tmp_r6
     MOVA R5, &tmp_r5
     CALLA #KeyGen
-    MOV &address_key, R5
-    XOR R6, R5
+    MOVA &address_key, R5
+    XORX R6, R5
     MOV R5, &address_xor
-    MOV &address_key, R5
-    XOR R4, R5
-    MOV R5, &address_sr
+    MOVA &address_key, R5
+    XORX R4, R5
+    MOVA R5, &address_sr
     MOV &verify_count, R5
     INC R5
     MOV R5, &verify_count
@@ -94,12 +90,12 @@ safe_calla_fun:
     MOVA R6, &tmp_r6
     MOVA R5, &tmp_r5
     CALLA #KeyGen
-    MOV &address_key, R5
-    XOR R6, R5
-    MOV R5, &address_xor
-    MOV &address_key, R5
-    XOR R4, R5
-    MOV R5, &address_sr
+    MOVA &address_key, R5
+    XORX R6, R5
+    MOVA R5, &address_xor
+    MOVA &address_key, R5
+    XORX R4, R5
+    MOVA R5, &address_sr
     MOV &verify_count, R5
     INC R5
     MOV R5, &verify_count
@@ -123,12 +119,12 @@ safe_ret_fun:
     MOV @SP, R6             ; Move the SP to the R6 register (our dstReg)
     MOVA R5, &tmp_r5
     CALLA #KeyGen
-    MOV &address_key, R5
-    XOR R6, R5
-    MOV R5, &address_xor
-    MOV &address_key, R5
-    XOR R4, R5
-    MOV R5, &address_sr
+    MOVA &address_key, R5
+    XORX R6, R5
+    MOVA R5, &address_xor
+    MOVA &address_key, R5
+    XORX R4, R5
+    MOVA R5, &address_sr
     MOV &verify_count, R5
     INC R5
     MOV R5, &verify_count
@@ -180,12 +176,12 @@ safe_reta_fun:
     MOVA @SP, R6
     MOVA R5, &tmp_r5
     CALLA #KeyGen
-    MOV &address_key, R5
-    XOR R6, R5
-    MOV R5, &address_xor
-    MOV &address_key, R5
-    XOR R4, R5
-    MOV R5, &address_sr
+    MOVA &address_key, R5
+    XORX R6, R5
+    MOVA R5, &address_xor
+    MOVA &address_key, R5
+    XORX R4, R5
+    MOVA R5, &address_sr
     MOV &verify_count, R5
     INC R5
     MOV R5, &verify_count
@@ -401,14 +397,17 @@ write_subcx_fun:
 read_mov_fun:
     DINT
     NOP
-    MOVX.A R4, &tmp_r4
-    MOVX.A &DFI_MAX, R4
+    MOV #0xa500, &0x0144
+    MOV #0xa540, &0x0140
+    MOVA R4, &tmp_r4
+    MOVA &DFI_MAX, R4
     MOV R5, @R4
+    MOV #0xa510, &0x0144
     DECX.A R4
     CMPX.A &DFI_MIN, R4
     JL .stop
-    MOV R4, &DFI_MAX
-    MOVX.A &tmp_r4, R4
+    MOVA R4, &DFI_MAX
+    MOVA &tmp_r4, R4
     MOV R5, R6
     CALLA #secureValue
     MOV R4, SR

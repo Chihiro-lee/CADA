@@ -11,15 +11,9 @@ volatile uint32_t tmp_r5 = 0;
 volatile uint32_t tmp_r6 = 0;
 
 volatile uint16_t write_count_lee = 0;
-volatile uint16_t write_address_value = 0;
-volatile uint16_t tmp_address = 0;
 uint8_t write_count_lee_bytes[2];
 
 uint8_t combined_bytes[10];
-
-
-//volatile uint32_t address_dfi = 0;
-//uint8_t dfi_bytes[4];
 
 /*** PUBLIC FUNCTIONS ****/
 
@@ -92,30 +86,8 @@ __attribute__((section(".tcm:codeUpper"))) void XorResult(){
     uart_send_hex_data(combined_bytes,10);
     
     uart_send_hex_data(write_count_lee_bytes, 2);
-    //uart_send_hex_data(combined_bytes, 8);
-    
-    //uint8_t verify_count_bytes[2];
-    //uint16_to_bytes(verify_count, verify_count_bytes);
-    //uart_send_hex_data(verify_count_bytes,2);
-    
-    //instruction_mode_bytes[0]= instruction_mode & 0xFF;
-    //uart_send_hex_data(instruction_mode_bytes, 1);
-    
-    //if (instruction_mode == 0 || instruction_mode == 1){
-    //        address_pc += 4;
-    //       uint32_to_bytes(address_pc,address_pc_bytes);
-    //        uart_send_hex_data(address_pc_bytes, 4);
-    //}
     uart_send_byte(0x54); //T
     uart_send_byte(0x0A);
     uart_send_byte(0x0D); //endline & CR
-    
-    //convert dfi to char array
-    //uint32_to_bytes(address_dfi, dfi_bytes);
-    //send dfi
-    //uart_send_hex_data(dfi_bytes, 4);
-    //uart_send_byte(0x0A);
-    //uart_send_byte(0x0D);
     __asm("mov.w &write_count_lee, r8");
-    //__eint();
 }
