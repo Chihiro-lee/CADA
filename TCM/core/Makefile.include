@@ -12,17 +12,15 @@ EXTMODULES_SRC = ./core/ext_modules
 
 
 #Modules to be loaded into the TCM
-#CORE_OBJS += $(COREOBJS_DIR)/core.o
-CORE_OBJS += $(COREOBJS_DIR)/core_withoutXorResult.o
+CORE_OBJS += $(COREOBJS_DIR)/core.o
 #CORE_OBJS += $(COREOBJS_DIR)/virt_fun.o
 CORE_OBJS += $(COREOBJS_DIR)/virt_fun_withoutMeasurement.o
-#CORE_OBJS += $(COREOBJS_DIR)/secureUpdate.o
-CORE_OBJS += $(COREOBJS_DIR)/secureUpdate_withoutXorResult.o
-CORE_OBJS += $(COREOBJS_DIR)/secureSend.o
+CORE_OBJS += $(COREOBJS_DIR)/secureUpdate.o
 CORE_OBJS += $(COREOBJS_DIR)/protected_isr.o
 CORE_OBJS += $(COREOBJS_DIR)/secureContextSwitch.o
 CORE_OBJS += $(COREOBJS_DIR)/secureValue.o
 CORE_OBJS += $(COREOBJS_DIR)/XorCompute.o
+CORE_OBJS += $(COREOBJS_DIR)/KeyGen.o
 
 #CORE_OBJS += $(COREOBJS_DIR)/ra.o
 #CORE_OBJS += $(COREOBJS_DIR)/Hacl_HMAC.o

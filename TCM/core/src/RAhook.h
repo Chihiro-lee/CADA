@@ -28,7 +28,7 @@ void initUART() {
     
     //__eint();
     __bis_SR_register(GIE);
-
+}
 void __attribute__((interrupt(USCI_A1_VECTOR))) USCI_A1_ISR(void) {
     switch(__even_in_range(UCA1IV,4)) {
     case 0:break;                             
