@@ -9,6 +9,9 @@
 #define REJECT 1 /* IF SET to 1 THEN WE REJECT THE APPLICATION WHEN AN INSTRUCTION FAILS VERIFICATION*/
 #define DEBUG 1 /* IF SET TO 1 WE TAKE NOTE OF WHAT WORD CAUSED THE VERIFICATION TO FAIL*/
 
+#define true 1
+#define false 0
+
 /** These constants need to be synchronised with the linker script and the various toolchain scripts **/
 __attribute__((section(".tcm:rodata"))) const uint16_t appTopRam            = 0x43FF;
 __attribute__((section(".tcm:rodata"))) const uint16_t appBottomRam         = 0x2c00;
@@ -188,6 +191,20 @@ uint16_t interruptWord =0;
 //Value of the PC when verification failed
 uint32_t interruptPcOld = 0;
 #endif
+/**
+ * Check if the instruction is a MOVE variant to a specific register
+ * Supports MOV, MOV.B, MOVX, MOVX.B, MOVA
+ */
+__attribute__((section(".tcm:code"))) bool isMoveToReg(uint16_t opCode, uint8_t extendedWord, uint8_t reg){
+    if (((opCode & 0xF000) == 0x4000) && ((opCode & 0x0080) == 0x0000) && ((opCode & 0x000F) == reg)) {
+        // Standard MOV/MOV.B/MOVX/MOVX.B to reg (Ad=0 for reg mode dst)
+        return true;
+    } else if (((opCode & 0xF000) == 0x0000) || ((opCode & 0xF000) == 0x1000) && ((opCode & 0x0F00) >> 8) == reg) {
+        // MOVA to reg (dst in bits 11-8, covers various modes)
+        return true;
+    }
+    return false;
+}
 /**
  * Verify the given set of instructions for illegal operations, 
    thus causing either the acceptance of the rejection of the application
@@ -963,7 +980,7 @@ __attribute__((section(".tcm:code"))) bool verify(uint16_t address, uint16_t las
                 }
             } //End immediate CALLA
             // Check for CALLA #XorCFevn and its preceding sequence
-                if (!cfi && (opCode & 0x00f0) == 0x00b0 && ((srcOperand20Bit == safe_call) || (srcOperand20Bit == safe_calla)) {
+                if (!cfi && (opCode & 0x00f0) == 0x00b0 && ((srcOperand20Bit == safe_call) || (srcOperand20Bit == safe_calla))) {
                     // Expected sequence: MOV SR,R4; DINT; NOP; MOVE variant to R6
                     bool sequenceValid = true;
                     // Check opcodes and dst registers
