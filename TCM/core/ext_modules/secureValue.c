@@ -2,7 +2,7 @@
 #include "stdlib.h"
 #include "secureValue.h"
 
-uint8_t* read_DFI_MAX = 0x00024001;
+uint32_t read_DFI_MAX = 0x00024001;
 uint8_t read_input_bytes[1];
 
 __attribute__((section(".tcm:code"))) void secureValue(){
@@ -31,13 +31,13 @@ __attribute__((section(".tcm:code"))) void secureValue(){
     P4OUT |= BIT7; 
     
     //send record_input
-    uint16_t record_input_size = 0;
+    //uint16_t record_input_size = 0;
     uint8_t record_input_size_bytes[2];
     while(read_DFI_MAX != DFI_MAX-1){
-        read_input_bytes[0] = *read_DFI_MAX;
+        read_input_bytes[0] = *(uint8_t*)read_DFI_MAX;
         read_DFI_MAX--;
         uart_send_hex_data(read_input_bytes, 1);
-        record_input_size++;
+        //record_input_size++;
     }
     uart_send_byte(0x0A);
     uart_send_byte(0x0D);
